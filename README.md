@@ -2,6 +2,8 @@
 
 A charming browser-based virtual pet game where you care for a cat companion. Features a cozy home room for pet care and an endless runner mini-game for exercise.
 
+> **A Father's Gift** - This game was lovingly created for my daughter, inspired by her imagination and ideas. Every feature, from the purring sounds to the litter box, came from her creative mind.
+
 ## Play Now
 
 Open `index.html` in any modern web browser. No installation or build process required.

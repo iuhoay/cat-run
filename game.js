@@ -192,6 +192,39 @@ const soundManager = {
 
         oscillator.start(this.audioContext.currentTime);
         oscillator.stop(this.audioContext.currentTime + 0.3);
+    },
+
+    playLitter() {
+        this.ensureContext();
+        if (!this.audioContext) return;
+
+        // Scratching/digging sound - noise-like texture
+        const bufferSize = this.audioContext.sampleRate * 0.5; // 0.5 seconds
+        const buffer = this.audioContext.createBuffer(1, bufferSize, this.audioContext.sampleRate);
+        const data = buffer.getChannelData(0);
+
+        for (let i = 0; i < bufferSize; i++) {
+            data[i] = (Math.random() * 2 - 1) * 0.3;
+        }
+
+        const noise = this.audioContext.createBufferSource();
+        noise.buffer = buffer;
+
+        const gainNode = this.audioContext.createGain();
+        gainNode.gain.setValueAtTime(0.15, this.audioContext.currentTime);
+        gainNode.gain.exponentialRampToValueAtTime(0.01, this.audioContext.currentTime + 0.5);
+
+        // Lowpass filter to make it sound like sand
+        const filter = this.audioContext.createBiquadFilter();
+        filter.type = 'lowpass';
+        filter.frequency.setValueAtTime(800, this.audioContext.currentTime);
+
+        noise.connect(filter);
+        filter.connect(gainNode);
+        gainNode.connect(this.audioContext.destination);
+
+        noise.start(this.audioContext.currentTime);
+        noise.stop(this.audioContext.currentTime + 0.5);
     }
 };
 
@@ -224,7 +257,8 @@ const catStats = {
     hunger: 80,    // 0 = starving, 100 = full
     thirst: 80,    // 0 = dehydrated, 100 = quenched
     energy: 80,    // 0 = exhausted, 100 = energized
-    happiness: 80  // 0 = sad, 100 = happy
+    happiness: 80, // 0 = sad, 100 = happy
+    hygiene: 80    // 0 = dirty, 100 = clean
 };
 
 let lastStatUpdate = 0;
@@ -234,7 +268,8 @@ const roomObjects = {
     foodBowl: { x: 0, y: 0, width: 60, height: 30, full: true },
     waterBowl: { x: 0, y: 0, width: 60, height: 30, full: true },
     bed: { x: 0, y: 0, width: 120, height: 80 },
-    door: { x: 0, y: 0, width: 80, height: 120 }
+    door: { x: 0, y: 0, width: 80, height: 120 },
+    litterBox: { x: 0, y: 0, width: 70, height: 50, clean: true }
 };
 
 // Cat object
@@ -244,7 +279,7 @@ const cat = {
     width: 50,
     height: 50,
     vy: 0,
-    state: 'running', // 'running', 'jumping', 'falling', 'idle', 'walking', 'eating', 'drinking', 'sleeping'
+    state: 'running', // 'running', 'jumping', 'falling', 'idle', 'walking', 'eating', 'drinking', 'sleeping', 'using_litter'
     animationFrame: 0,
     animationTimer: 0,
     onGround: false,
@@ -289,6 +324,9 @@ function initRoomObjects() {
     roomObjects.bed.y = centerY + 20;
     roomObjects.door.x = canvas.width * 0.5 - 40;
     roomObjects.door.y = centerY - 80;
+    roomObjects.litterBox.x = canvas.width * 0.85;
+    roomObjects.litterBox.y = centerY + 90;
+    roomObjects.litterBox.clean = true;
 }
 
 // Initialize cat position
@@ -330,9 +368,10 @@ function updateStats() {
     if (catStats.hunger > 0) catStats.hunger -= STAT_DECAY_RATE;
     if (catStats.thirst > 0) catStats.thirst -= STAT_DECAY_RATE;
     if (catStats.energy > 0 && gameState === 'running') catStats.energy -= STAT_DECAY_RATE * 2;
+    if (catStats.hygiene > 0) catStats.hygiene -= STAT_DECAY_RATE * 0.5; // Hygiene decays slower
 
     // Happiness based on other stats
-    const avgStats = (catStats.hunger + catStats.thirst + catStats.energy) / 3;
+    const avgStats = (catStats.hunger + catStats.thirst + catStats.energy + catStats.hygiene) / 4;
     catStats.happiness = avgStats;
 
     // Clamp stats
@@ -340,6 +379,7 @@ function updateStats() {
     catStats.thirst = Math.max(0, Math.min(MAX_STAT, catStats.thirst));
     catStats.energy = Math.max(0, Math.min(MAX_STAT, catStats.energy));
     catStats.happiness = Math.max(0, Math.min(MAX_STAT, catStats.happiness));
+    catStats.hygiene = Math.max(0, Math.min(MAX_STAT, catStats.hygiene));
 
     // Update HTML stat bars
     updateStatBars();
@@ -349,12 +389,14 @@ function updateStats() {
 const hungerBar = document.getElementById('hungerBar');
 const thirstBar = document.getElementById('thirstBar');
 const energyBar = document.getElementById('energyBar');
+const hygieneBar = document.getElementById('hygieneBar');
 
 // Update HTML stat bars
 function updateStatBars() {
     if (hungerBar) hungerBar.style.width = `${catStats.hunger}%`;
     if (thirstBar) thirstBar.style.width = `${catStats.thirst}%`;
     if (energyBar) energyBar.style.width = `${catStats.energy}%`;
+    if (hygieneBar) hygieneBar.style.width = `${catStats.hygiene}%`;
 }
 
 // Draw start screen
@@ -675,6 +717,42 @@ function drawFurniture() {
     ctx.fillStyle = '#fff';
     ctx.font = 'bold 14px Arial';
     ctx.fillText('GO RUN', roomObjects.door.x + roomObjects.door.width / 2, roomObjects.door.y + roomObjects.door.height / 2);
+
+    // Litter Box
+    const lb = roomObjects.litterBox;
+    // Box container
+    ctx.fillStyle = '#2d5a4a';
+    ctx.fillRect(lb.x, lb.y, lb.width, lb.height);
+
+    // Litter/sand inside
+    ctx.fillStyle = lb.clean ? '#c4a574' : '#b8956a';
+    ctx.fillRect(lb.x + 5, lb.y + 10, lb.width - 10, lb.height - 15);
+
+    // Litter texture (small dots)
+    ctx.fillStyle = '#a08060';
+    for (let i = 0; i < 15; i++) {
+        const lx = lb.x + 10 + (i * 3) % (lb.width - 20);
+        const ly = lb.y + 15 + (i * 7) % (lb.height - 25);
+        ctx.beginPath();
+        ctx.arc(lx, ly, 1.5, 0, Math.PI * 2);
+        ctx.fill();
+    }
+
+    // Show "used" state
+    if (!lb.clean) {
+        // Draw clumps
+        ctx.fillStyle = '#8b7355';
+        ctx.beginPath();
+        ctx.arc(lb.x + 20, lb.y + 30, 5, 0, Math.PI * 2);
+        ctx.arc(lb.x + 35, lb.y + 25, 4, 0, Math.PI * 2);
+        ctx.arc(lb.x + 50, lb.y + 32, 6, 0, Math.PI * 2);
+        ctx.fill();
+    }
+
+    // Litter box label
+    ctx.fillStyle = '#333';
+    ctx.font = '12px Arial';
+    ctx.fillText('Litter', lb.x + lb.width / 2, lb.y + lb.height + 15);
 }
 
 // Draw cat in room
@@ -850,6 +928,11 @@ function drawRoomCat() {
         ctx.fillText('z', 20, -40);
         ctx.fillText('z', 25, -50);
         ctx.fillText('z', 30, -60);
+    } else if (cat.state === 'using_litter') {
+        ctx.fillStyle = '#8b7355';
+        ctx.font = '14px Arial';
+        ctx.fillText('🐾', 0, -45);
+        ctx.fillText('dig dig...', 15, -55);
     }
 
     ctx.restore();
@@ -878,13 +961,14 @@ function updateRoomCat() {
             // Perform action
             if (cat.currentAction) {
                 cat.state = cat.currentAction === 'eat' ? 'eating' :
-                           cat.currentAction === 'drink' ? 'drinking' : 'sleeping';
+                           cat.currentAction === 'drink' ? 'drinking' :
+                           cat.currentAction === 'use_litter' ? 'using_litter' : 'sleeping';
                 cat.actionTimer = 120; // 2 seconds at 60fps
             } else {
                 cat.state = 'idle';
             }
         }
-    } else if (cat.state === 'eating' || cat.state === 'drinking' || cat.state === 'sleeping') {
+    } else if (cat.state === 'eating' || cat.state === 'drinking' || cat.state === 'sleeping' || cat.state === 'using_litter') {
         // Handle action timer
         cat.actionTimer--;
 
@@ -900,6 +984,10 @@ function updateRoomCat() {
                 setTimeout(() => { roomObjects.waterBowl.full = true; }, 10000);
             } else if (cat.state === 'sleeping') {
                 catStats.energy = Math.min(MAX_STAT, catStats.energy + 40);
+            } else if (cat.state === 'using_litter') {
+                catStats.hygiene = Math.min(MAX_STAT, catStats.hygiene + 40);
+                roomObjects.litterBox.clean = false;
+                setTimeout(() => { roomObjects.litterBox.clean = true; }, 15000); // Auto-clean after 15 seconds
             }
 
             cat.state = 'idle';
@@ -953,6 +1041,7 @@ function fullReset() {
     catStats.thirst = 80;
     catStats.energy = 80;
     catStats.happiness = 80;
+    catStats.hygiene = 80;
     gameOverElement.classList.add('hidden');
     instructionsElement.classList.add('hidden');
     statBarsElement.classList.add('hidden');
@@ -1027,6 +1116,11 @@ function handleRoomClick(x, y) {
         cat.targetY = roomObjects.bed.y + roomObjects.bed.height / 2;
         cat.currentAction = 'sleep';
         soundManager.playSleep();
+    } else if (pointInRect(x, y, roomObjects.litterBox)) {
+        cat.targetX = roomObjects.litterBox.x + roomObjects.litterBox.width / 2;
+        cat.targetY = roomObjects.litterBox.y + roomObjects.litterBox.height / 2 - 10;
+        cat.currentAction = 'use_litter';
+        soundManager.playLitter();
     } else if (pointInRect(x, y, roomObjects.door)) {
         startRunning();
     }

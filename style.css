@@ -134,6 +134,10 @@ body {
     background: linear-gradient(90deg, #51cf66, #69db7c);
 }
 
+.stat-bar-fill.hygiene {
+    background: linear-gradient(90deg, #a9e34b, #d8f5a2);
+}
+
 /* Reset Button */
 #resetBtn {
     position: absolute;

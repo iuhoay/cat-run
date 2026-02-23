@@ -5,6 +5,93 @@ const gameOverElement = document.getElementById('gameOver');
 const finalScoreElement = document.getElementById('finalScore');
 const instructionsElement = document.getElementById('instructions');
 
+// Sound Manager using Web Audio API
+const soundManager = {
+    audioContext: null,
+    initialized: false,
+
+    init() {
+        if (this.initialized) return;
+        try {
+            this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            this.initialized = true;
+        } catch (e) {
+            console.warn('Web Audio API not supported, sounds disabled');
+        }
+    },
+
+    ensureContext() {
+        if (!this.initialized) {
+            this.init();
+        }
+        if (this.audioContext && this.audioContext.state === 'suspended') {
+            this.audioContext.resume();
+        }
+    },
+
+    playJump() {
+        this.ensureContext();
+        if (!this.audioContext) return;
+
+        const oscillator = this.audioContext.createOscillator();
+        const gainNode = this.audioContext.createGain();
+
+        oscillator.connect(gainNode);
+        gainNode.connect(this.audioContext.destination);
+
+        oscillator.type = 'sine';
+        oscillator.frequency.setValueAtTime(300, this.audioContext.currentTime);
+        oscillator.frequency.exponentialRampToValueAtTime(600, this.audioContext.currentTime + 0.15);
+
+        gainNode.gain.setValueAtTime(0.3, this.audioContext.currentTime);
+        gainNode.gain.exponentialRampToValueAtTime(0.01, this.audioContext.currentTime + 0.15);
+
+        oscillator.start(this.audioContext.currentTime);
+        oscillator.stop(this.audioContext.currentTime + 0.15);
+    },
+
+    playGameOver() {
+        this.ensureContext();
+        if (!this.audioContext) return;
+
+        const oscillator = this.audioContext.createOscillator();
+        const gainNode = this.audioContext.createGain();
+
+        oscillator.connect(gainNode);
+        gainNode.connect(this.audioContext.destination);
+
+        oscillator.type = 'sawtooth';
+        oscillator.frequency.setValueAtTime(200, this.audioContext.currentTime);
+        oscillator.frequency.exponentialRampToValueAtTime(50, this.audioContext.currentTime + 0.5);
+
+        gainNode.gain.setValueAtTime(0.4, this.audioContext.currentTime);
+        gainNode.gain.exponentialRampToValueAtTime(0.01, this.audioContext.currentTime + 0.5);
+
+        oscillator.start(this.audioContext.currentTime);
+        oscillator.stop(this.audioContext.currentTime + 0.5);
+    },
+
+    playScore() {
+        this.ensureContext();
+        if (!this.audioContext) return;
+
+        const oscillator = this.audioContext.createOscillator();
+        const gainNode = this.audioContext.createGain();
+
+        oscillator.connect(gainNode);
+        gainNode.connect(this.audioContext.destination);
+
+        oscillator.type = 'sine';
+        oscillator.frequency.setValueAtTime(800, this.audioContext.currentTime);
+
+        gainNode.gain.setValueAtTime(0.2, this.audioContext.currentTime);
+        gainNode.gain.exponentialRampToValueAtTime(0.01, this.audioContext.currentTime + 0.05);
+
+        oscillator.start(this.audioContext.currentTime);
+        oscillator.stop(this.audioContext.currentTime + 0.05);
+    }
+};
+
 // Set canvas size
 function resizeCanvas() {
     canvas.width = window.innerWidth;
@@ -77,6 +164,7 @@ function jump() {
         cat.state = 'jumping';
         cat.onGround = false;
         instructionsElement.classList.add('hidden');
+        soundManager.playJump();
     }
 }
 
@@ -94,6 +182,7 @@ function restart() {
 
 // Input handling
 window.addEventListener('keydown', (e) => {
+    soundManager.init();
     if (e.code === 'Space' || e.code === 'ArrowUp') {
         e.preventDefault();
         jump();
@@ -103,6 +192,7 @@ window.addEventListener('keydown', (e) => {
 });
 
 window.addEventListener('pointerdown', () => {
+    soundManager.init();
     if (gameState === 'running') {
         jump();
     } else if (gameState === 'gameover') {
@@ -112,6 +202,7 @@ window.addEventListener('pointerdown', () => {
 
 window.addEventListener('touchstart', (e) => {
     e.preventDefault();
+    soundManager.init();
     if (gameState === 'running') {
         jump();
     } else if (gameState === 'gameover') {
@@ -371,6 +462,7 @@ function updateObstacles() {
         if (!obstacle.passed && obstacle.x + obstacle.width < cat.x) {
             obstacle.passed = true;
             score += 10;
+            soundManager.playScore();
         }
 
         return obstacle.x + obstacle.width > 0;
@@ -502,6 +594,7 @@ function gameLoop() {
         // Check collisions
         if (checkGameOver()) {
             gameState = 'gameover';
+            soundManager.playGameOver();
             finalScoreElement.textContent = score;
             gameOverElement.classList.remove('hidden');
             instructionsElement.textContent = 'Click or Press R to Restart';

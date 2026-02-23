@@ -2,7 +2,7 @@
 
 ## Project Overview
 
-Cat Runner is a vanilla JavaScript browser-based virtual pet game with no build system, dependencies, or framework requirements. It uses HTML5 Canvas for rendering and Web Audio API for procedural sound generation.
+Cat Runner is a vanilla JavaScript browser-based virtual pet game with ES6 modules, no build system, and no dependencies. Uses HTML5 Canvas for rendering and Web Audio API for procedural sound generation.
 
 ## Running the Game
 
@@ -24,7 +24,7 @@ npx serve
 
 ## Testing & Quality
 
-**No automated tests or linting configured.** This is a simple single-file game.
+**No automated tests or linting configured.**
 
 Manual testing checklist:
 - Open index.html in Chrome/Firefox/Safari
@@ -42,11 +42,31 @@ Manual testing checklist:
 ### File Structure
 ```
 cat-run/
-├── index.html    # Main HTML structure with UI elements
+├── index.html    # Main HTML with import map and UI
 ├── style.css     # CSS for game UI overlay
-├── game.js       # All game logic (1694 lines)
-├── icon.svg      # Game favicon
-└── README.md     # Documentation
+├── js/
+│   ├── main.js           # Entry point, initialization
+│   ├── constants.js      # Game constants
+│   ├── state.js          # Global state and export functions
+│   ├── game.js           # Game loop and state transitions
+│   ├── canvas.js         # Canvas setup and resize handling
+│   ├── audio.js          # Web Audio API sound manager
+│   ├── input.js          # Keyboard/touch/mouse event handlers
+│   ├── stats.js          # Cat stat decay logic
+│   ├── utils.js          # Utility functions
+│   ├── background.js      # Parallax background rendering
+│   ├── obstacles.js      # Obstacle spawning and rendering
+│   ├── room/
+│   │   ├── cat.js        # Cat behavior in room mode
+│   │   ├── objects.js    # Room objects and furniture
+│   │   └── renderer.js   # Room scene rendering
+│   ├── runner/
+│   │   ├── cat.js        # Cat physics and movement
+│   │   └── logic.js      # Collision detection
+│   └── ui/
+│       ├── dom.js        # DOM element references and UI updates
+│       └── screens.js    # Start screen rendering
+└── README.md
 ```
 
 ### JavaScript Conventions
@@ -54,119 +74,76 @@ cat-run/
 **Naming:**
 - Variables/Functions: camelCase (`catStats`, `updateCat`, `drawBackground`)
 - Constants: UPPER_SNAKE_CASE (`GRAVITY`, `JUMP_FORCE`, `MAX_STAT`)
-- Objects/Classes: PascalCase for constructors (not used - plain objects only)
-- DOM elements: camelCase ending with `Element` (`canvas`, `scoreElement`, `resetBtnElement`)
+- DOM elements: camelCase ending with `Element` or clear naming
+- State objects: lowercase descriptive names (`game`, `cat`, `obstacles`)
 
-**Code Organization:**
-1. DOM element references (lines 1-8)
-2. `soundManager` object - Web Audio API methods (lines 11-262)
-3. Canvas setup (lines 264-270)
-4. Game constants (lines 272-280)
-5. Game state variables (lines 282-297)
-6. Game objects (rooms, cat, obstacles, background)
-7. Initialization functions
-8. Update functions (game logic)
-9. Draw functions (rendering)
-10. Input event handlers
-11. Game loop (lines 1643-1694)
+**Imports:**
+- Use import map aliases defined in index.html (`game/state`, `game/constants`)
+- Do not use relative paths (`./state.js`) except in dynamic imports
+- Always import what you use at the top of the file
 
 **Rendering:**
-- Use HTML5 Canvas API (`ctx.fillStyle`, `ctx.fillRect`, `ctx.beginPath`, etc.)
 - Canvas coordinates: (0,0) at top-left
+- Always check `canvas` and `ctx` existence before drawing
 - Use `ctx.save()`/`ctx.restore()` for transformations
 - Game runs at 60fps via `requestAnimationFrame`
 
 **State Management:**
-- Single `gameState` variable: 'start', 'room', 'running', 'gameover'
-- Cat stats object with hunger, thirst, energy, happiness, hygiene (0-100)
-- All state updates happen in update functions called by gameLoop
+- Export state from `state.js`, import elsewhere
+- State modifications happen in update functions
+- Use setter functions when needed (`setCanvas`, `setLastStatUpdate`)
 
 **Audio:**
-- Procedural sound generation using Web Audio API
 - Initialize audio on first user interaction
-- Use oscillators, gain nodes, and filters
-- Always check `audioContext` existence before playing sounds
+- Check `audioContext` existence before playing sounds
+- Use `soundManager.ensureContext()` before any sound call
 
 **Input Handling:**
-- Keyboard: `keydown` event listener (Space, ArrowUp for jump, Enter for confirm, R for reset)
-- Mouse: `pointerdown` event
-- Touch: `touchstart` event (preventDefault to avoid scrolling)
-- All input handlers init audio context
-
-**Animation:**
-- Use `frameCount` for time-based animations
-- Bounce effects: `Math.sin(frameCount * speed) * amplitude`
-- Walking/running: `Math.sin(frameCount * 0.3)` for leg oscillation
-- Tail wagging: `Math.sin(frameCount * 0.1)` for slower movement
-
-**Collision Detection:**
-- AABB (Axis-Aligned Bounding Box) collision
-- Shrink hitboxes slightly for fairness (10-15% smaller than sprites)
+- Single `keydown` listener in `input.js`
+- Single `pointerdown` listener (handles both mouse and touch)
+- Prevent default for game controls to avoid scrolling
+- Initialize audio context on any user interaction
 
 **Error Handling:**
-- Minimal error handling in this simple game
-- Audio operations wrapped in try/catch with console.warn for Web Audio failures
-- Graceful degradation if audio unavailable
+- Check for null canvas/ctx before operations
+- Validate game state before state transitions
+- No try/catch needed for most operations
 
-**CSS Conventions:**
-- CSS Grid/Flexbox for UI layout
-- Absolute positioning for UI overlays over canvas
-- Responsive design with `@media` queries
-- Transitions for smooth UI changes (`transition: all 0.2s ease`)
-- Text shadows for better contrast
-- `pointer-events: none` on UI container, `pointer-events: auto` on interactive elements
-
-**Colors:**
-- Cat: #ff8c42 (orange)
-- Sky: #87CEEB
-- Ground: #3d5c3d
-- UI backgrounds: rgba(0,0,0,0.5-0.8) for contrast
-- Stat bar gradients for visual appeal
+**CSS:**
+- Flexbox/Grid for UI layout
+- Absolute positioning for overlays over canvas
+- `@media` queries for responsive design
+- Transitions for smooth UI changes
+- Text shadows for contrast
 
 ## Key Patterns
 
-**Game Loop Pattern:**
+**Module Import Pattern:**
 ```javascript
-function gameLoop() {
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    frameCount++;
-    
-    if (gameState === 'room') {
-        updateStats();
-        updateRoomCat();
-        drawRoom();
-    } else if (gameState === 'running') {
-        updateBackground();
-        updateCat();
-        updateObstacles();
-        drawBackground();
-        drawObstacles();
-        drawCat();
-        if (checkGameOver()) {
-            // Handle game over
-        }
-    }
-    
-    requestAnimationFrame(gameLoop);
+import { game, cat, canvas, ctx } from 'game/state';
+import { GRAVITY, JUMP_FORCE } from 'game/constants';
+import { soundManager } from 'game/audio';
+```
+
+**State Transition Pattern:**
+```javascript
+export function enterRoom() {
+    game.state = 'room';
+    initRoomObjects();
+    initCatInRoom();
+    soundManager.playRoomEnter();
 }
 ```
 
-**State Machine for Cat:**
-Cat states: 'running', 'jumping', 'falling', 'idle', 'walking', 'eating', 'drinking', 'sleeping', 'using_litter', 'bathing'
+**Canvas Drawing Pattern:**
+```javascript
+export function drawCat() {
+    if (!canvas || !ctx) return;
+    ctx.save();
+    ctx.translate(cat.x, cat.y);
+    // Draw operations
+    ctx.restore();
+}
+```
 
-**Parallax Background:**
-Multiple layers with different scroll speeds based on `gameSpeed`
-
-## Browser Compatibility
-
-Targets modern browsers (Chrome 80+, Firefox 75+, Safari 13+, Mobile browsers with ES6)
-
-## Modifying the Game
-
-- All game logic in `game.js`
-- Visual changes: modify draw functions
-- Gameplay changes: modify update functions and constants
-- New features: add to appropriate object (cat, roomObjects, etc.)
-- Add new sounds: create new method in `soundManager`
-
-**IMPORTANT:** No comments in code - keep it minimal and self-documenting through clear naming.
+**No comments in code** - keep it minimal and self-documenting through clear naming.

@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Cat Runner</title>
+    <title>Cat Runner - Virtual Pet</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -11,11 +11,32 @@
         <canvas id="gameCanvas"></canvas>
         <div id="ui">
             <div id="score">Score: 0</div>
-            <div id="instructions">Press SPACE or Click to Jump</div>
+            <div id="statBars" class="hidden">
+                <div class="stat-bar">
+                    <span class="stat-label">Hunger</span>
+                    <div class="stat-bar-bg">
+                        <div class="stat-bar-fill hunger" id="hungerBar"></div>
+                    </div>
+                </div>
+                <div class="stat-bar">
+                    <span class="stat-label">Thirst</span>
+                    <div class="stat-bar-bg">
+                        <div class="stat-bar-fill thirst" id="thirstBar"></div>
+                    </div>
+                </div>
+                <div class="stat-bar">
+                    <span class="stat-label">Energy</span>
+                    <div class="stat-bar-bg">
+                        <div class="stat-bar-fill energy" id="energyBar"></div>
+                    </div>
+                </div>
+            </div>
+            <button id="resetBtn" class="hidden">Reset</button>
+            <div id="instructions" class="hidden">Press SPACE or Click to Jump</div>
             <div id="gameOver" class="hidden">
                 <h2>Game Over!</h2>
                 <p>Final Score: <span id="finalScore">0</span></p>
-                <p>Press R to Restart</p>
+                <p>Click or Press Enter to Return to Room</p>
             </div>
         </div>
     </div>

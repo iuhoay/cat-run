@@ -81,3 +81,120 @@ body {
 .hidden {
     display: none !important;
 }
+
+/* Stat Bars */
+#statBars {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    pointer-events: none;
+}
+
+.stat-bar {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.stat-label {
+    color: #fff;
+    font-size: 12px;
+    font-weight: bold;
+    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
+    width: 50px;
+    text-align: right;
+}
+
+.stat-bar-bg {
+    width: 100px;
+    height: 14px;
+    background: rgba(0, 0, 0, 0.5);
+    border-radius: 7px;
+    overflow: hidden;
+}
+
+.stat-bar-fill {
+    height: 100%;
+    border-radius: 7px;
+    transition: width 0.3s ease;
+}
+
+.stat-bar-fill.hunger {
+    background: linear-gradient(90deg, #ff6b6b, #ff8c42);
+}
+
+.stat-bar-fill.thirst {
+    background: linear-gradient(90deg, #4dabf7, #74c0fc);
+}
+
+.stat-bar-fill.energy {
+    background: linear-gradient(90deg, #51cf66, #69db7c);
+}
+
+/* Reset Button */
+#resetBtn {
+    position: absolute;
+    top: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    padding: 8px 24px;
+    background: rgba(255, 107, 107, 0.9);
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    border-radius: 20px;
+    color: #fff;
+    font-size: 14px;
+    font-weight: bold;
+    cursor: pointer;
+    pointer-events: auto;
+    transition: all 0.2s ease;
+    z-index: 10;
+}
+
+#resetBtn:hover {
+    background: rgba(255, 107, 107, 1);
+    transform: translateX(-50%) scale(1.05);
+}
+
+/* Responsive adjustments */
+@media (max-width: 600px) {
+    #score {
+        font-size: 18px;
+        top: 10px;
+        left: 10px;
+    }
+
+    #statBars {
+        top: 50px;
+        right: 10px;
+    }
+
+    .stat-bar-bg {
+        width: 80px;
+    }
+
+    .stat-label {
+        font-size: 10px;
+        width: 40px;
+    }
+
+    #resetBtn {
+        top: 10px;
+        padding: 6px 16px;
+        font-size: 12px;
+    }
+
+    #gameOver {
+        padding: 20px 30px;
+    }
+
+    #gameOver h2 {
+        font-size: 28px;
+    }
+
+    #gameOver p {
+        font-size: 16px;
+    }
+}

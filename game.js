@@ -461,13 +461,13 @@ function drawStartScreen() {
 
     // Title
     ctx.fillStyle = '#fff';
-    ctx.font = 'bold 64px Arial';
+    ctx.font = 'bold 64px Nunito, sans-serif';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
     ctx.fillText('Cat Runner', canvas.width / 2, canvas.height / 2 - 150);
 
     // Subtitle
-    ctx.font = '24px Arial';
+    ctx.font = '24px Nunito, sans-serif';
     ctx.fillStyle = '#aaa';
     ctx.fillText('Your virtual cat companion', canvas.width / 2, canvas.height / 2 - 100);
 
@@ -500,7 +500,7 @@ function drawStartScreen() {
 
     // Button text
     ctx.fillStyle = '#fff';
-    ctx.font = 'bold 20px Arial';
+    ctx.font = 'bold 20px Nunito, sans-serif';
     ctx.fillText('Enter Room', canvas.width / 2, btnY + 28);
 
     // Store button position for click detection
@@ -659,7 +659,7 @@ function drawRoom() {
 
     // Draw instructions
     ctx.fillStyle = 'rgba(0, 0, 0, 0.6)';
-    ctx.font = '14px Arial';
+    ctx.font = '14px Nunito, sans-serif';
     ctx.textAlign = 'center';
     ctx.fillText('Click on objects to interact • Click door to go running', canvas.width / 2, canvas.height - 30);
 }
@@ -694,7 +694,7 @@ function drawFurniture() {
 
     // Food label
     ctx.fillStyle = '#333';
-    ctx.font = '12px Arial';
+    ctx.font = 'bold 12px Nunito, sans-serif';
     ctx.textAlign = 'center';
     ctx.fillText('Food', roomObjects.foodBowl.x + roomObjects.foodBowl.width / 2, roomObjects.foodBowl.y + roomObjects.foodBowl.height + 15);
 
@@ -724,6 +724,7 @@ function drawFurniture() {
 
     // Water label
     ctx.fillStyle = '#333';
+    ctx.font = 'bold 12px Nunito, sans-serif';
     ctx.fillText('Water', roomObjects.waterBowl.x + roomObjects.waterBowl.width / 2, roomObjects.waterBowl.y + roomObjects.waterBowl.height + 15);
 
     // Bed
@@ -736,6 +737,7 @@ function drawFurniture() {
 
     // Bed label
     ctx.fillStyle = '#333';
+    ctx.font = 'bold 12px Nunito, sans-serif';
     ctx.fillText('Bed', roomObjects.bed.x + roomObjects.bed.width / 2, roomObjects.bed.y + roomObjects.bed.height + 15);
 
     // Door
@@ -755,7 +757,7 @@ function drawFurniture() {
 
     // Door label
     ctx.fillStyle = '#fff';
-    ctx.font = 'bold 14px Arial';
+    ctx.font = 'bold 14px Nunito, sans-serif';
     ctx.fillText('GO RUN', roomObjects.door.x + roomObjects.door.width / 2, roomObjects.door.y + roomObjects.door.height / 2);
 
     // Bathtub
@@ -783,7 +785,7 @@ function drawFurniture() {
 
     // Tub label
     ctx.fillStyle = '#333';
-    ctx.font = '12px Arial';
+    ctx.font = 'bold 12px Nunito, sans-serif';
     ctx.fillText('Bath', bt.x + bt.width / 2, bt.y + bt.height + 15);
 
     // Litter Box
@@ -819,7 +821,7 @@ function drawFurniture() {
 
     // Litter box label
     ctx.fillStyle = '#333';
-    ctx.font = '12px Arial';
+    ctx.font = 'bold 12px Nunito, sans-serif';
     ctx.fillText('Litter', lb.x + lb.width / 2, lb.y + lb.height + 15);
 }
 
@@ -984,26 +986,26 @@ function drawRoomCat() {
     // Action indicators
     if (cat.state === 'eating') {
         ctx.fillStyle = '#8b0000';
-        ctx.font = '16px Arial';
+        ctx.font = '16px Nunito, sans-serif';
         ctx.fillText('🍖', 0, -50);
     } else if (cat.state === 'drinking') {
         ctx.fillStyle = '#4682b4';
-        ctx.font = '16px Arial';
+        ctx.font = '16px Nunito, sans-serif';
         ctx.fillText('💧', 0, -50);
     } else if (cat.state === 'sleeping') {
         ctx.fillStyle = '#666';
-        ctx.font = '12px Arial';
+        ctx.font = 'bold 12px Nunito, sans-serif';
         ctx.fillText('z', 20, -40);
         ctx.fillText('z', 25, -50);
         ctx.fillText('z', 30, -60);
     } else if (cat.state === 'using_litter') {
         ctx.fillStyle = '#8b7355';
-        ctx.font = '14px Arial';
+        ctx.font = 'bold 14px Nunito, sans-serif';
         ctx.fillText('🐾', 0, -45);
         ctx.fillText('dig dig...', 15, -55);
     } else if (cat.state === 'bathing') {
         ctx.fillStyle = '#4dabf7';
-        ctx.font = '14px Arial';
+        ctx.font = 'bold 14px Nunito, sans-serif';
         ctx.fillText('🫧', -20, -45);
         ctx.fillText('🫧', 10, -55);
         ctx.fillText('splash...', 5, -65);

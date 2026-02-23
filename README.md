@@ -8,7 +8,15 @@ A charming browser-based virtual pet game where you care for a cat companion. Fe
 
 ## Play Now
 
-Open `index.html` in any modern web browser. No installation or build process required.
+Play online: **https://iuhoay.github.io/cat-run/**
+
+Or run locally:
+
+```bash
+npx serve
+# or
+bunx serve
+```
 
 ## How to Play
 
@@ -61,10 +69,31 @@ Click the door to enter runner mode:
 
 ```
 cat-run/
-├── index.html    # Main HTML structure
-├── style.css     # Styling and responsive design
-├── game.js       # Game logic, rendering, and audio
-└── README.md     # This file
+├── index.html          # Main HTML structure
+├── style.css           # Styling and responsive design
+├── js/
+│   ├── main.js         # Entry point
+│   ├── game.js         # Game loop and controller
+│   ├── audio.js        # Web Audio API sound manager
+│   ├── canvas.js       # Canvas setup
+│   ├── constants.js    # Game constants
+│   ├── state.js        # Game state management
+│   ├── input.js        # Input handling
+│   ├── obstacles.js    # Obstacle system
+│   ├── background.js   # Parallax background
+│   ├── stats.js        # Stat management
+│   ├── utils.js        # Utility functions
+│   ├── room/           # Room mode
+│   │   ├── cat.js      # Room cat behavior
+│   │   ├── objects.js  # Room objects
+│   │   └── renderer.js # Room rendering
+│   ├── runner/         # Runner mode
+│   │   ├── cat.js      # Runner cat behavior
+│   │   └── logic.js    # Runner game logic
+│   └── ui/             # UI components
+│       ├── dom.js      # DOM elements
+│       └── screens.js  # Screen management
+└── README.md           # This file
 ```
 
 ## Browser Compatibility

@@ -225,6 +225,39 @@ const soundManager = {
 
         noise.start(this.audioContext.currentTime);
         noise.stop(this.audioContext.currentTime + 0.5);
+    },
+
+    playBath() {
+        this.ensureContext();
+        if (!this.audioContext) return;
+
+        // Water splash sound
+        const bufferSize = this.audioContext.sampleRate * 0.8;
+        const buffer = this.audioContext.createBuffer(1, bufferSize, this.audioContext.sampleRate);
+        const data = buffer.getChannelData(0);
+
+        for (let i = 0; i < bufferSize; i++) {
+            data[i] = (Math.random() * 2 - 1) * Math.max(0, 1 - i / bufferSize) * 0.5;
+        }
+
+        const noise = this.audioContext.createBufferSource();
+        noise.buffer = buffer;
+
+        const gainNode = this.audioContext.createGain();
+        gainNode.gain.setValueAtTime(0.2, this.audioContext.currentTime);
+        gainNode.gain.exponentialRampToValueAtTime(0.01, this.audioContext.currentTime + 0.8);
+
+        const filter = this.audioContext.createBiquadFilter();
+        filter.type = 'lowpass';
+        filter.frequency.setValueAtTime(1000, this.audioContext.currentTime);
+        filter.frequency.exponentialRampToValueAtTime(300, this.audioContext.currentTime + 0.8);
+
+        noise.connect(filter);
+        filter.connect(gainNode);
+        gainNode.connect(this.audioContext.destination);
+
+        noise.start(this.audioContext.currentTime);
+        noise.stop(this.audioContext.currentTime + 0.8);
     }
 };
 
@@ -269,7 +302,8 @@ const roomObjects = {
     waterBowl: { x: 0, y: 0, width: 60, height: 30, full: true },
     bed: { x: 0, y: 0, width: 120, height: 80 },
     door: { x: 0, y: 0, width: 80, height: 120 },
-    litterBox: { x: 0, y: 0, width: 70, height: 50, clean: true }
+    litterBox: { x: 0, y: 0, width: 70, height: 50, clean: true },
+    bathtub: { x: 0, y: 0, width: 100, height: 60, full: true }
 };
 
 // Cat object
@@ -279,7 +313,7 @@ const cat = {
     width: 50,
     height: 50,
     vy: 0,
-    state: 'running', // 'running', 'jumping', 'falling', 'idle', 'walking', 'eating', 'drinking', 'sleeping', 'using_litter'
+    state: 'running', // 'running', 'jumping', 'falling', 'idle', 'walking', 'eating', 'drinking', 'sleeping', 'using_litter', 'bathing'
     animationFrame: 0,
     animationTimer: 0,
     onGround: false,
@@ -327,6 +361,9 @@ function initRoomObjects() {
     roomObjects.litterBox.x = canvas.width * 0.85;
     roomObjects.litterBox.y = centerY + 90;
     roomObjects.litterBox.clean = true;
+    roomObjects.bathtub.x = canvas.width * 0.08;
+    roomObjects.bathtub.y = centerY + 70;
+    roomObjects.bathtub.full = true;
 }
 
 // Initialize cat position
@@ -718,6 +755,34 @@ function drawFurniture() {
     ctx.font = 'bold 14px Arial';
     ctx.fillText('GO RUN', roomObjects.door.x + roomObjects.door.width / 2, roomObjects.door.y + roomObjects.door.height / 2);
 
+    // Bathtub
+    const bt = roomObjects.bathtub;
+    // Tub body
+    ctx.fillStyle = '#e0e0e0';
+    ctx.fillRect(bt.x, bt.y, bt.width, bt.height);
+
+    // Tub border
+    ctx.strokeStyle = '#b0b0b0';
+    ctx.lineWidth = 4;
+    ctx.strokeRect(bt.x, bt.y, bt.width, bt.height);
+
+    // Water inside
+    if (bt.full) {
+        ctx.fillStyle = '#74c0fc';
+        ctx.fillRect(bt.x + 5, bt.y + 15, bt.width - 10, bt.height - 20);
+
+        // Water shimmer
+        ctx.fillStyle = '#a5d8ff';
+        ctx.beginPath();
+        ctx.ellipse(bt.x + 30, bt.y + 25, 15, 5, 0, 0, Math.PI * 2);
+        ctx.fill();
+    }
+
+    // Tub label
+    ctx.fillStyle = '#333';
+    ctx.font = '12px Arial';
+    ctx.fillText('Bath', bt.x + bt.width / 2, bt.y + bt.height + 15);
+
     // Litter Box
     const lb = roomObjects.litterBox;
     // Box container
@@ -933,6 +998,12 @@ function drawRoomCat() {
         ctx.font = '14px Arial';
         ctx.fillText('🐾', 0, -45);
         ctx.fillText('dig dig...', 15, -55);
+    } else if (cat.state === 'bathing') {
+        ctx.fillStyle = '#4dabf7';
+        ctx.font = '14px Arial';
+        ctx.fillText('🫧', -20, -45);
+        ctx.fillText('🫧', 10, -55);
+        ctx.fillText('splash...', 5, -65);
     }
 
     ctx.restore();
@@ -962,13 +1033,14 @@ function updateRoomCat() {
             if (cat.currentAction) {
                 cat.state = cat.currentAction === 'eat' ? 'eating' :
                            cat.currentAction === 'drink' ? 'drinking' :
-                           cat.currentAction === 'use_litter' ? 'using_litter' : 'sleeping';
+                           cat.currentAction === 'use_litter' ? 'using_litter' :
+                           cat.currentAction === 'bathe' ? 'bathing' : 'sleeping';
                 cat.actionTimer = 120; // 2 seconds at 60fps
             } else {
                 cat.state = 'idle';
             }
         }
-    } else if (cat.state === 'eating' || cat.state === 'drinking' || cat.state === 'sleeping' || cat.state === 'using_litter') {
+    } else if (cat.state === 'eating' || cat.state === 'drinking' || cat.state === 'sleeping' || cat.state === 'using_litter' || cat.state === 'bathing') {
         // Handle action timer
         cat.actionTimer--;
 
@@ -988,6 +1060,10 @@ function updateRoomCat() {
                 catStats.hygiene = Math.min(MAX_STAT, catStats.hygiene + 40);
                 roomObjects.litterBox.clean = false;
                 setTimeout(() => { roomObjects.litterBox.clean = true; }, 15000); // Auto-clean after 15 seconds
+            } else if (cat.state === 'bathing') {
+                catStats.hygiene = Math.min(MAX_STAT, catStats.hygiene + 60);
+                roomObjects.bathtub.full = false;
+                setTimeout(() => { roomObjects.bathtub.full = true; }, 20000); // 20秒后水自动变满
             }
 
             cat.state = 'idle';
@@ -1116,6 +1192,13 @@ function handleRoomClick(x, y) {
         cat.targetY = roomObjects.bed.y + roomObjects.bed.height / 2;
         cat.currentAction = 'sleep';
         soundManager.playSleep();
+    } else if (pointInRect(x, y, roomObjects.bathtub)) {
+        if (roomObjects.bathtub.full) {
+            cat.targetX = roomObjects.bathtub.x + roomObjects.bathtub.width / 2;
+            cat.targetY = roomObjects.bathtub.y + roomObjects.bathtub.height / 2 - 10;
+            cat.currentAction = 'bathe';
+            soundManager.playBath();
+        }
     } else if (pointInRect(x, y, roomObjects.litterBox)) {
         cat.targetX = roomObjects.litterBox.x + roomObjects.litterBox.width / 2;
         cat.targetY = roomObjects.litterBox.y + roomObjects.litterBox.height / 2 - 10;

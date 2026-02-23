@@ -350,20 +350,23 @@ for (let i = 0; i < 5; i++) {
 // Initialize room object positions
 function initRoomObjects() {
     const centerY = canvas.height / 2 + 50;
-    roomObjects.foodBowl.x = canvas.width * 0.2;
-    roomObjects.foodBowl.y = centerY + 80;
-    roomObjects.waterBowl.x = canvas.width * 0.2 + 80;
-    roomObjects.waterBowl.y = centerY + 80;
-    roomObjects.bed.x = canvas.width * 0.7;
-    roomObjects.bed.y = centerY + 20;
+    // Left area: bed (top), food and water (bottom)
+    roomObjects.bed.x = canvas.width * 0.08;
+    roomObjects.bed.y = centerY + 60;
+    roomObjects.foodBowl.x = canvas.width * 0.10;
+    roomObjects.foodBowl.y = centerY + 180;
+    roomObjects.waterBowl.x = canvas.width * 0.22;
+    roomObjects.waterBowl.y = centerY + 180;
+    // Center: door
     roomObjects.door.x = canvas.width * 0.5 - 40;
     roomObjects.door.y = centerY - 80;
-    roomObjects.litterBox.x = canvas.width * 0.85;
-    roomObjects.litterBox.y = centerY + 90;
-    roomObjects.litterBox.clean = true;
-    roomObjects.bathtub.x = canvas.width * 0.08;
-    roomObjects.bathtub.y = centerY + 70;
+    // Right area: bathtub (top), litter (bottom)
+    roomObjects.bathtub.x = canvas.width * 0.72;
+    roomObjects.bathtub.y = centerY + 60;
     roomObjects.bathtub.full = true;
+    roomObjects.litterBox.x = canvas.width * 0.85;
+    roomObjects.litterBox.y = centerY + 80;
+    roomObjects.litterBox.clean = true;
 }
 
 // Initialize cat position

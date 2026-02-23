@@ -1,10 +1,8 @@
 # Cat Runner - Virtual Pet Game
 
-![icon](icon.svg)
+<img src="icon.svg" width="80" alt="Cat Runner Icon">
 
 A charming browser-based virtual pet game where you care for a cat companion. Features a cozy home room for pet care and an endless runner mini-game for exercise.
-
-![video](videos/start.mp4)
 
 > **A Father's Gift** - This game was lovingly created for my daughter, inspired by her imagination and ideas. Every feature, from the purring sounds to the litter box, came from her creative mind.
 
